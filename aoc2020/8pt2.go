@@ -12,7 +12,7 @@ func check(e error) {
 	}
 }
 func main() {
-	file, err := os.Open("input8.txt")
+	file, err := os.Open("aocInputs/input8.txt")
 	check(err)
 	f := []string{}  // Slice to hold file contents
 	scanner := bufio.NewScanner(file)
@@ -20,72 +20,72 @@ func main() {
 		line := scanner.Text()
 		f = append(f, line)
 	}
-	i := 0 // Current index within file f
-	list := [200000]int{} // Slice of all the indices that have been seen thus far.
-	list[0] = -2  // Initialize index 0 with nonzero so it doesn't already end program.
-	dup := false // Existence of duplicate
-	accum := 0  // Accumulator value
-	max := 0 // Maximum i value
-	for ! dup {
-		if list[i] == i && i != 0 {
-			fmt.Println("The value in the accumulator is", accum, "and i after is", i)
-			dup = true
+	found := false // Have we found the error yet?
+	j := 0 // Index of the line we will change
+	for ! found {
+		i := 0 // Current index within file f
+		list := [200000]int{} // Slice of all the indices that have been seen thus far.
+		list[0] = -2  // Initialize index 0 with nonzero so it doesn't already end program.
+		dup := false // Existence of duplicate (indicative of not having found error yet)
+		max := 0 // Maximum i value
+		accum := 0  // Accumulator value
+		origline := f[j] // So we can change it back if it isn't the erroneous line
+		if f[j] != "nop +0" { // To avoid creating an infinite jmp +0 situation
+			if f[j][:3] == "jmp" {
+				f[j] = "nop" + f[j][3:]
+			} else if f[j][:3] == "nop" { // So I don't change it right back
+				f[j] = "jmp" + f[j][3:]
+			}
 		}
-		if i > max {
-			max = i
+		for ! dup {
+			if list[i] == i && i != 0 {
+				dup = true
+			}
+			if i > max {
+				max = i
+			}
+			list[i] = i
+			instr := f[i][:3] // Instruction
+			val, e := strconv.Atoi(f[i][4:])  // e.g. -99 or +2
+			check(e)
+			if instr == "acc" {
+				accum += val
+				i++
+			}
+			if instr == "jmp" {
+				i += val
+			}
+			if instr == "nop" {
+				i++
+			}
+			if i >= len(f) - 1 {
+				found = true
+				break
+			} 
+		} 
+		if found {
+			break // To get out of the ! found loop without changing f[j] back
 		}
-		list[i] = i
-		fmt.Println(f[i], "i:", i, "list[i] = ", list[i])
-		instr := f[i][:3] // Instruction
-		val, e := strconv.Atoi(f[i][4:])  // e.g. -99 or +2
+		f[j] = origline
+		j++
+	}
+	// Now we get the accumulator value we want, with the modified file
+	k := 0
+	finala := 0 // Final accumulator
+	for k < len(f) { // change back to <=
+		instr := f[k][:3] // Instruction
+		val, e := strconv.Atoi(f[k][4:])  // e.g. -99 or +2
 		check(e)
 		if instr == "acc" {
-			accum += val
-			i++
+			finala += val
+			k++
 		}
 		if instr == "jmp" {
-			i += val
+			k += val
 		}
 		if instr == "nop" {
-			i++
+			k++
 		}
 	}
-	// Part 2
-	newlist := [200000]int{} 
-	newlist[0] = -2
-	fmt.Println("max:", max, "fmax:", f[max])
-	if f[max][0:3] == "jmp" {
-		f[max] = "nop" + f[max][3:]
-	} else {
-		f[max] = "jmp" + f[max][3:]
-	}
-	fmt.Println(f[max])
-	dup = false
-	j := 0
-	accum = 0
-	fmt.Println(len(f))
-	for ! dup && j < len(f) {
-		/*if newlist[j] == j && j != 0 {
-			fmt.Println("The value in the accumulator is", accum, "and i after is", j)
-			dup = true
-		} */
-		newlist[j] = j
-//		fmt.Println(j)
-//		fmt.Println(f[j], "j:", j, "list[j] = ", newlist[j])
-		instr := f[j][:3] // Instruction
-		val, e := strconv.Atoi(f[j][4:])  // e.g. -99 or +2
-		check(e)
-		if instr == "acc" {
-			accum += val
-			j++
-		}
-		if instr == "jmp" {
-			j += val
-		}
-		if instr == "nop" {
-			j++
-		}
-	}
-	fmt.Println("Value in accumulator after normal termination:", accum)
-} // Pt 1 answer: 1584. i after is 347 (that's the position it lands back at).
-//   i before is 374.
+	fmt.Println("The answer is:", finala)
+}

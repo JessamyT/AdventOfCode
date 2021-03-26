@@ -34,14 +34,6 @@ func ordremove(slice []int, s int) []int { // For when order does matter (part 2
 	}
 	return l
 }
-func isValid(l []int) bool {
-	for i := 0; i < len(l) - 1; i++ {
-		if l[i + 1] - l[i] > 3 {
-			return false
-		}
-	}
-	return true
-}
 // To make more efficient, put valid indices in a map with whatever values
 func arrange(L []int, q int, solutions int) int {
 	for i := q; i < len(L) - 1; i++ {
@@ -49,9 +41,6 @@ func arrange(L []int, q int, solutions int) int {
 			newL := ordremove(L, i)
 			solutions = arrange(newL, i, solutions + 1)
 		}
-	/*	if solutions % 1000000 == 0 {
-			fmt.Println(solutions)
-		} */
 	}
 	return solutions
 }
@@ -102,7 +91,6 @@ func main() {
 	}
 	fmt.Println("There are", jolt1, "1-jolt differences and", jolt3, "3-jolt differences.")
 	fmt.Print("Their product is ", jolt1 * jolt3, ".\n")
-	fmt.Println(chain)
 	// Split the chain approximately in half for efficiency
 	var chain1 []int
 	var chain2 []int
@@ -120,8 +108,6 @@ func main() {
 			chain2 = append(chain2, v)
 		}
 	}
-	fmt.Println(len(chain2), len(chain2))
-	fmt.Println(chain1, chain2)
 	answer := (arrange(chain1, 1, 0) + 1) * (arrange(chain2, 1, 0) + 1) // Add + 1 for the unchanged chain
 	fmt.Println("The answer to part 2 is:", answer)
 }
